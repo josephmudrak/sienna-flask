@@ -52,6 +52,9 @@ document.addEventListener("DOMContentLoaded", () =>
 
 					// Queue for audio chunks
 					let audioChunks		= [];
+					let audioElement	= new Audio();
+
+					let audioContext	= null;
 
 					// Audio currently playing?
 					let isPlaying		= false;
@@ -62,15 +65,15 @@ document.addEventListener("DOMContentLoaded", () =>
 						console.log("WebSocket connection opened")
 					})
 
-					elSocket.on("audio_chunk", (data) =>
+					elSocket.on("audio_chunk", async(data) =>
 					{
 						// Add audio chunk to queue
 						audioChunks.push(data.audio);
 
 						// If not currently playing, start playback
-						if (!isPlaying)
+						if (audioElement.paused)
 						{
-							playNextChunk();
+							await playNextChunk();
 						}
 					});
 
@@ -84,39 +87,16 @@ document.addEventListener("DOMContentLoaded", () =>
 						// Chunks remaining in queue?
 						if (audioChunks.length > 0)
 						{
-							isPlaying	= true;
+							// Next chunk as audio element source
+							audioElement.src	= `data:audio/mp3;base64,${audioChunks.shift()}`;
 
-							const audioContext	= new AudioContext();
+							audioElement.play();
 
-							// Convert base64 to ArrayBuffer
-							const audioArrBuf	= base64ToArrayBuffer(
-								audioChunks.shift()
-							);
-
-							// Decode ArrayBuffer to AudioBuffer
-							const audioBuf	= 
-								await audioContext.decodeAudioData(
-									audioArrBuf
-							);
-							
-							const src	= audioContext.createBufferSource();
-							src.buffer	= audioBuf;
-							src.connect(audioContext.destination);
-
-							// Set callback for playback end
-							src.onended	= () =>
-							{
-								isPlaying	= false;
-
-								// Close AudioContext after playback
-								audioContext.close();
-
-								playNextChunk();
-							}
-
-							src.start();
+							audioElement.onended	= playNextChunk;
 						}
 					}
+
+					playNextChunk();
 				}
 			}
 
