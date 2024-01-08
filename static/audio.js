@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () =>
 	{
 		const mediaRecorder	= new MediaRecorder(stream);
 		
-		btnStart.addEventListener("click", () =>
+		btnStart.addEventListener("click",  () =>
 		{
 			// Initialise connection to Deepgram
 			const dgSocket	= new WebSocket(
@@ -97,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () =>
 					}
 
 					playNextChunk();
+					dgSocket.close();
 				}
 			}
 
