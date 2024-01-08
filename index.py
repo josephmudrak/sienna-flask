@@ -24,7 +24,12 @@ CORS(app)
 socketio	= SocketIO(
 	app,
 	async_mode="threading",
-	cors_allowed_origins="http://127.0.0.1:3000"	# Allow localhost
+
+	# Allow localhost
+	cors_allowed_origins=[
+		"http://127.0.0.1:3000",
+		"http://localhost:3000"
+	]
 )
 
 # Queue to store audio chunks

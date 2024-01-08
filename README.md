@@ -14,9 +14,9 @@ Sienna requires the following to run properly:
 	- You may need to install additional packages depending on your operating
 	environment.
 
-*Note:* Sienna has been confirmed to work on Ubuntu Desktop and Fedora
-Workstation. It **may or may not** work on other systems, so please report any
-additional testing.
+*Note:* Sienna has been confirmed to run on Ubuntu Desktop, Fedora Workstation,
+and Windows 10. It **may or may not** work on other systems, so please report
+any additional testing.
 
 ## Usage
 To run Sienna, type `python3 index.py` to start the server. Then, navigate to
