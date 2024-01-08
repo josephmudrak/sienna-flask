@@ -21,7 +21,11 @@ app	= Flask(__name__)
 CORS(app)
 
 # Initialise SocketIO for WebSocket streaming
-socketio	= SocketIO(app, async_mode="threading")
+socketio	= SocketIO(
+	app,
+	async_mode="threading",
+	cors_allowed_origins="http://127.0.0.1:3000"	# Allow localhost
+)
 
 # Queue to store audio chunks
 audio_chunk_queue	= asyncio.Queue()
