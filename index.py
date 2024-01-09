@@ -11,8 +11,10 @@ from openai import OpenAI
 
 load_dotenv()  # Take environment variables from .env
 
-openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-VOICE_ID = "oWAxZDx7w5VEj9dCyTzz"  # Grace
+openai: OpenAI = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+VOICE_ID: str = "oWAxZDx7w5VEj9dCyTzz"  # Grace
+
+messages: list[dict] = []
 
 # Initialise Flask
 app = Flask(__name__)
@@ -64,20 +66,25 @@ def handle_disconnect():
 @app.route("/reply", methods=["GET", "POST"])
 def process_transcription():
     print("Received transcription")
+    global messages
     query = request.data.decode("utf-8")  # Get transcription as string
+    messages.append({"role": "user", "content": query})
     response = openai.chat.completions.create(
         model="gpt-4-1106-preview",
-        messages=[{"role": "user", "content": query}],
-        temperature=1,
+        messages=messages,
+        temperature=0.6,
         stream=True,
         max_tokens=15,  # Artifically limit number of tokens (for testing only)
     )
+    current_response: str = ""
 
     def text_iterator():
         for chunk in response:
             delta = chunk.choices[0].delta
 
             if delta.content is not None:
+                nonlocal current_response
+                current_response += delta.content
                 yield delta.content
 
     generator = text_iterator()
@@ -91,6 +98,7 @@ def process_transcription():
             latency=3,
         )
     )
+    messages.append({"role": "assistant", "content": current_response})
     return json.dumps({"success": True}), 200
 
 

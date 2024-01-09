@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async () =>
 		{
 			// Initialise connection to Deepgram
 			const dgSocket	= new WebSocket(
-				"wss://api.deepgram.com/v1/listen",
+				"wss://api.deepgram.com/v1/listen?model=nova-2",
 				["token", "a12a55ee5b9e4bb5ed14bcbf6f8af42acfa0c63d"]
 			);
 
