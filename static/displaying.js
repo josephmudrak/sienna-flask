@@ -13,7 +13,7 @@ elSocket.on("message", async (data) => {
         document.getElementById("conversation").innerHTML += "<br><br>"
         return;
     }
-
+    await new Promise(resolve => setTimeout(resolve, 2000));
     document.getElementById("conversation").innerHTML += `<span style="color:red">${data}</span>`;
 });
 
