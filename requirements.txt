@@ -1,4 +1,4 @@
-Flask==3.0.0
+flask[async]==3.0.0
 Flask_Cors==4.0.0
 Flask_SocketIO==5.3.6
 openai==1.6.1
