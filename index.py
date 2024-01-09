@@ -79,12 +79,15 @@ def process_transcription():
     current_response: str = ""
 
     def text_iterator():
+        socketio.emit("message", "new_response", namespace="/stream")
         for chunk in response:
             delta = chunk.choices[0].delta
 
             if delta.content is not None:
                 nonlocal current_response
                 current_response += delta.content
+                # Send audio chunk to client
+                socketio.emit("message", delta.content, namespace="/stream")
                 yield delta.content
 
     generator = text_iterator()
