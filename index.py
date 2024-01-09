@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 
@@ -12,9 +11,14 @@ from openai import OpenAI
 load_dotenv()  # Take environment variables from .env
 
 openai: OpenAI = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-VOICE_ID: str = "oWAxZDx7w5VEj9dCyTzz"  # Grace
+VOICE_ID: str = "21m00Tcm4TlvDq8ikWAM"  # Rachel
 
-messages: list[dict] = []
+messages: list[dict] = [
+    {
+        "role": "system",
+        "content": "Prompt: Please use this past context for the rest of the conversation, and use this context to make good suggestions if a topic is brought up again or mentioned, use the conversation context below to improve the conversation. DO NOT RESPOND TO THIS PROMPT ACKNOWLEDGING THAT YOU KNOW THIS, instead use the context to respond to the users response as mentioned, call the user by their name. Actively make an effort to reference past conversations on certain dates to provide another level of immersion. System prompt: You ou are a helpful voice assistant called Sienna, your purpose is to provide helpful, short and sweet response. You are a little bit sassy kind of like cortana. Conversation context: January 6, 2024: Liam: I'm looking for a good historical novel to read during my vacation. Any recommendations? AI voice assistant: Considering your interest in history and previous book choices, The Shadow King might intrigue you. It's set during the Italian invasion of Ethiopia and offers a rich narrative. Shall I add it to your reading list? Liam: That sounds intriguing. Yes, please add it. And can you also find a quiet spot near my vacation spot where I could enjoy reading? AI voice assistant: Certainly. There's a peaceful botanical garden with shaded benches and a lovely view of the sea, ideal for reading. It's called Tranquil Bay Gardens and is just a short distance from your accommodation. Liam: Great, add that to my itinerary, and remind me to pack the book and sunscreen before I leave. AI voice assistant: All set. Your itinerary is updated, and I've set a reminder for packing essentials. Enjoy your reading and vacation, Liam!",
+    }
+]
 
 # Initialise Flask
 app = Flask(__name__)
@@ -28,32 +32,16 @@ socketio = SocketIO(
     cors_allowed_origins=["http://127.0.0.1:3000", "http://localhost:3000"],
 )
 
-# Queue to store audio chunks
-audio_chunk_queue = asyncio.Queue()
-
 
 @app.route("/", methods=["GET", "POST"])
 def get_message():
     return render_template("index.htm")
 
 
-# Handle audio chunk event
-@socketio.on("audio_chunk", namespace="/stream")
-def handle_audio_chunk(chunk_data):
-    print(f"Received audio chunk: {chunk_data}")
-    socketio.emit("audio_chunk", {"audio": chunk_data}, namespace="/stream")
-
-
 # Handle start of audio stream
 @socketio.on("connect", namespace="/stream")
 def handle_connect():
     print("Client connected")
-
-    # Audio chunks queued?
-    while not audio_chunk_queue.empty():
-        # De-queue & emit audio chunk
-        chunk_data = audio_chunk_queue.get_nowait()
-        socketio.emit("audio_chunk", chunk_data, namespace="/stream")
 
 
 # Handle end of audio stream
@@ -72,9 +60,9 @@ def process_transcription():
     response = openai.chat.completions.create(
         model="gpt-4-1106-preview",
         messages=messages,
-        temperature=0.6,
+        temperature=0.5,
         stream=True,
-        max_tokens=15,  # Artifically limit number of tokens (for testing only)
+        max_tokens=150,  # Artifically limit number of tokens (for testing only)
     )
     current_response: str = ""
 
