@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             // Initialise connection to Deepgram
             const dgSocket = new WebSocket(
-                "wss://api.deepgram.com/v1/listen?model=nova-2",
+                "wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&interim_results=true",
                 ["token", "a12a55ee5b9e4bb5ed14bcbf6f8af42acfa0c63d"]
             );
 
@@ -33,7 +33,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     dgReceived.channel.alternatives[0].transcript;
 
                 if (dgTranscript && dgReceived.is_final) {
-                    document.getElementById("conversation").innerHTML += `<br><br><span style="color:blue">${dgTranscript}</span>`;
+                    document.getElementById("conversation").innerHTML += `<br><br><span class="human">${dgTranscript}</span>`;
+                    window.scrollTo(0, document.body.scrollHeight);
                     console.log(dgTranscript);
                     mediaRecorder.stop();
                     dgSocket.close();

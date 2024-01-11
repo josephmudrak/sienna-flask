@@ -14,7 +14,8 @@ elSocket.on("message", async (data) => {
         return;
     }
     await new Promise(resolve => setTimeout(resolve, 2000));
-    document.getElementById("conversation").innerHTML += `<span style="color:red">${data}</span>`;
+    document.getElementById("conversation").innerHTML += `<span class="bot">${data}</span>`;
+    window.scrollTo(0, document.body.scrollHeight);
 });
 
 elSocket.on("disconnect", () => {
