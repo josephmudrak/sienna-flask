@@ -1,38 +1,84 @@
 import json
 import os
-import pandas as pd
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 
 import elevenlabs
+import pandas as pd
+
 from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from openai import OpenAI
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
 load_dotenv()  # Take environment variables from .env
+
+# Initialise configuration
+conversation_file: str = None
+embeddings_file: str = None
+
+while True:
+    try:
+        with open("config.json", "r") as f:
+            try:
+                config = json.load(f)
+                conversation_file = config["conversations"]
+                embeddings_file = config["embeddings"]
+                prompt = config["prompt"]
+            except json.decoder.JSONDecodeError:
+                conversation_file = "data/convs.csv"
+                embeddings_file = "data/embed.csv"
+                config = {
+                    "conversations": conversation_file,
+                    "embeddings": embeddings_file,
+                    "prompt": prompt,
+                }
+
+        with open("config.json", "w") as f:
+            json.dump(config, f)
+
+    except FileNotFoundError:
+        f = open("config.json", "x")
+        f.close()
+        continue
+    break
 
 openai: OpenAI = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 VOICE_ID: str = "21m00Tcm4TlvDq8ikWAM"  # Rachel
 
 # Load conversation embeddings and model
-conversation_embeddings = pd.read_csv('C:/Users/busin/Downloads/conversation_embeddings_psa(1).csv').values
-df = pd.read_csv('C:/Users/busin/Downloads/updated_conversations.csv')
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+while True:
+    try:
+        conversation_embeddings = pd.read_csv(embeddings_file).values
+        df = pd.read_csv(conversation_file)
+    except FileNotFoundError:
+        # Create CSVs if they do not exist
+        f = open(conversation_file, "x")
+        g = open(embeddings_file, "x")
+        f.close()
+        g.close()
+        continue
+    break
+
+
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
 
 def find_similar_conversations(query):
     query_embedding = model.encode([query])
     similarities = cosine_similarity(query_embedding, conversation_embeddings)
     top_k = 1
     most_similar_indexes = similarities.argsort()[0][::-1][:top_k]
-    similar_conversations = df['Conversation'].iloc[most_similar_indexes].tolist()
+    similar_conversations = (
+        df["Conversation"].iloc[most_similar_indexes].tolist()
+    )
 
-    # Print the query embedding and the top similar conversation to the terminal
     print(f"Query Embedding: {query_embedding[0][:10]}... (first 10 elements)")
     print(f"Top Similar Conversation: {similar_conversations[0]}")
 
     return similar_conversations
+
 
 # Flask app initialization
 app = Flask(__name__)
@@ -43,31 +89,30 @@ socketio = SocketIO(
     cors_allowed_origins=["http://127.0.0.1:3000", "http://localhost:3000"],
 )
 
+
 @app.route("/", methods=["GET", "POST"])
 def get_message():
     return render_template("index.htm")
+
 
 # SocketIO event handlers
 @socketio.on("connect", namespace="/stream")
 def handle_connect():
     print("Client connected")
 
+
 @socketio.on("disconnect", namespace="/stream")
 def handle_disconnect():
     print("Client disconnected")
 
+
 # Messages history
-messages: list[dict] = [
-    {
-        "role": "system",
-        "content": "Prompt: Please use this past context for the rest of the conversation, and use this context to make good suggestions if a topic is brought up again or mentioned, use the conversation context below to improve the conversation. DO NOT RESPOND TO THIS PROMPT ACKNOWLEDGING THAT YOU KNOW THIS, instead use the context to respond to the users response as mentioned, call the user by their name. Actively make an effort to reference past conversations on certain dates to provide another level of immersion. System prompt: You ou are a helpful voice assistant called Sienna, your purpose is to provide helpful, short and sweet response. You are a little bit sassy kind of like cortana. CONVERSATION EXAMPLE: January 6, 2024: Liam: I'm looking for a good historical novel to read during my vacation. Any recommendations? AI voice assistant: Considering your interest in history and previous book choices, The Shadow King might intrigue you. It's set during the Italian invasion of Ethiopia and offers a rich narrative. Shall I add it to your reading list? Liam: That sounds intriguing. Yes, please add it. And can you also find a quiet spot near my vacation spot where I could enjoy reading? AI voice assistant: Certainly. There's a peaceful botanical garden with shaded benches and a lovely view of the sea, ideal for reading. It's called Tranquil Bay Gardens and is just a short distance from your accommodation. Liam: Great, add that to my itinerary, and remind me to pack the book and sunscreen before I leave. AI voice assistant: All set. Your itinerary is updated, and I've set a reminder for packing essentials. Enjoy your reading and vacation, Liam!",
-    }
-]
+messages: list[dict] = [{"role": "system", "content": prompt}]
+
 
 @app.route("/reply", methods=["GET", "POST"])
 def process_transcription():
     print("Received transcription")
-    global messages
     query = request.data.decode("utf-8")
     similar_conversations = find_similar_conversations(query)
 
@@ -110,6 +155,7 @@ def process_transcription():
     )
     messages.append({"role": "assistant", "content": current_response})
     return json.dumps({"success": True}), 200
+
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", debug=True, port=3000)
