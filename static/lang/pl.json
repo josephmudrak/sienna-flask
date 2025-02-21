@@ -1,0 +1,15 @@
+{
+  "title": "Sienna \u2013 tw\u00f3j dynamiczny asystent g\u0142osowy AI",
+  "query_embedding": "Osadzenie kwerendy:",
+  "first_10_elements": "(pierwsze 10 element\u00f3w)",
+  "most_similar_conversation": "Najbardziej podobna rozmowa:",
+  "client_connected": "Klient po\u0142\u0105czony",
+  "client_disconnected": "Klient roz\u0142\u0105czony",
+  "received_transcription": "Otrzymano transkrypcj\u0119",
+  "conversation_example": "Przyk\u0142adowa rozmowa:",
+  "error_accessing_microphone": "B\u0142\u0105d przy uzyskiwaniu dost\u0119pu do mikrofonu:",
+  "websocket_connection_opened": "Otwarto po\u0142\u0105czenie WebSocket",
+  "websocket_connection_closed": "Zamkni\u0119to po\u0142\u0105czenie WebSocket",
+  "recording": "Nagrywanie\u2026",
+  "start_recording": "Rozpocznij nagrywanie"
+}

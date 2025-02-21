@@ -5,7 +5,7 @@ import elevenlabs
 import pandas as pd
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request
+from flask import Flask, g, jsonify, render_template, request
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from openai import OpenAI
@@ -17,6 +17,22 @@ load_dotenv()  # Take environment variables from .env
 # Initialise configuration
 conversation_file: str = None
 embeddings_file: str = None
+
+
+def t(key, locale="en", placeholders=None):
+    global translations
+
+    # Fallback to "en" if locale is missing
+    locale_translations = translations.get(locale, translations["en"])
+    translation = locale_translations.get(key, key)  # Translation or key
+
+    # Replace placeholders
+    if placeholders:
+        for placeholder, value in placeholders.items():
+            translations = translation.replace(f"{{{placeholder}}}", str(value))
+
+    return translation
+
 
 while True:
     try:
@@ -74,8 +90,12 @@ def find_similar_conversations(query):
         df["Conversation"].iloc[most_similar_indexes].tolist()
     )
 
-    print(f"Query Embedding: {query_embedding[0][:10]}... (first 10 elements)")
-    print(f"Top Similar Conversation: {similar_conversations[0]}")
+    print(
+        f"{t('query_embedding', g.locale)} {query_embedding[0][:10]}... {t('first_10_elements', g.locale)}"
+    )
+    print(
+        f"{t('most_similar_conversation', g.locale)}: {similar_conversations[0]}"
+    )
 
     return similar_conversations
 
@@ -90,20 +110,59 @@ socketio = SocketIO(
 )
 
 
+@app.before_request
+def detect_locale():
+    g.locale = request.cookies.get("locale", "en")
+
+
+# Load translations
+def load_translations():
+    translations = {}
+    translations_dir = "static/lang"
+
+    for filename in os.listdir(translations_dir):
+        if filename.endswith(".json"):
+            locale = filename.split(".")[0]
+
+            with open(
+                os.path.join(translations_dir, filename), "r", encoding="utf-8"
+            ) as file:
+                translations[locale] = json.load(file)
+
+    return translations
+
+
+translations = load_translations()
+
+
 @app.route("/", methods=["GET", "POST"])
 def get_message():
-    return render_template("index.htm")
+    locale = request.cookies.get(
+        "locale", "en"
+    )  # Default to "en" if not provided
+    return render_template("index.htm", locale=locale)
+
+
+@app.route("/set-locale", methods=["POST"])
+def set_locale():
+    data = request.json
+    locale = data.get("locale", "en")  # Default to "en"
+
+    # Store locale in cookie
+    response = jsonify(success=True)
+    response.set_cookie("locale", locale, samesite="Strict")
+    return response
 
 
 # SocketIO event handlers
 @socketio.on("connect", namespace="/stream")
 def handle_connect():
-    print("Client connected")
+    print(t("client_connected", g.locale))
 
 
 @socketio.on("disconnect", namespace="/stream")
 def handle_disconnect():
-    print("Client disconnected")
+    print(t("client_disconnected", g.locale))
 
 
 # Messages history
@@ -112,13 +171,15 @@ messages: list[dict] = [{"role": "system", "content": prompt}]
 
 @app.route("/reply", methods=["GET", "POST"])
 def process_transcription():
-    print("Received transcription")
+    print(t("received_transcription", g.locale))
     query = request.data.decode("utf-8")
     similar_conversations = find_similar_conversations(query)
 
     if similar_conversations:
         top_conversation = similar_conversations[0]
-        conversation_context = f"CONVERSATION EXAMPLE: {top_conversation}"
+        conversation_context = (
+            f"{t('conversation_example', g.locale)}: {top_conversation}"
+        )
         messages.append({"role": "system", "content": conversation_context})
 
     messages.append({"role": "user", "content": query})

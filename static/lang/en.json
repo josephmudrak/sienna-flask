@@ -1,0 +1,15 @@
+{
+  "title": "Sienna \u2013 Your Dynamic AI Voice Assistant",
+  "query_embedding": "Query embedding:",
+  "first_10_elements": "(first 10 elements)",
+  "most_similar_conversation": "Most similar conversation:",
+  "client_connected": "Client connected",
+  "client_disconnected": "Client disconnected",
+  "received_transcription": "Received transcription",
+  "conversation_example": "Conversation example:",
+  "error_accessing_microphone": "Error accessing microphone:",
+  "websocket_connection_opened": "WebSocket connection opened",
+  "websocket_connection_closed": "WebSocket connection closed",
+  "recording": "Recording\u2026",
+  "start_recording": "Start Recording"
+}
