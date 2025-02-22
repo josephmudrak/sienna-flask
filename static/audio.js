@@ -1,6 +1,6 @@
-let locale;
+export let locale;
 
-let translations = {};
+export let translations = {};
 
 async function fetchTranslationsFor(newLocale) {
   const response = await fetch(`/static/lang/${newLocale}.json`);
@@ -67,8 +67,8 @@ function startRecording(el, rec) {
 
   // Initialise connection to Deepgram
   const dgSocket = new WebSocket(
-    "wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&interim_results=true",
-    ["token", "a12a55ee5b9e4bb5ed14bcbf6f8af42acfa0c63d"]
+    `wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&interim_results=true&language=${locale}`,
+    ["token", "f8c821aefb7f0f28944d03bcb1ed13c70db1ee2f"]
   );
 
   // Logging WebSocket events
@@ -86,6 +86,7 @@ function startRecording(el, rec) {
   dgSocket.onmessage = async (msg) => {
     // Parse data sent from Deepgram
     const dgReceived = JSON.parse(msg.data);
+    console.log(dgReceived);
     const dgTranscript = dgReceived.channel.alternatives[0].transcript;
 
     if (dgTranscript && dgReceived.is_final) {
@@ -122,8 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     .then((stream) => {
       const mediaRecorder = new MediaRecorder(stream);
 
-      btnStart.addEventListener(
-        "click",
+      btnStart.addEventListener("click", () =>
         startRecording(btnStart, mediaRecorder)
       );
 

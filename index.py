@@ -1,7 +1,6 @@
+import elevenlabs
 import json
 import os
-
-import elevenlabs
 import pandas as pd
 
 from dotenv import load_dotenv
@@ -106,7 +105,7 @@ CORS(app)
 socketio = SocketIO(
     app,
     async_mode="threading",
-    cors_allowed_origins=["http://127.0.0.1:3000", "http://localhost:3000"],
+    cors_allowed_origins="*",
 )
 
 
@@ -157,12 +156,19 @@ def set_locale():
 # SocketIO event handlers
 @socketio.on("connect", namespace="/stream")
 def handle_connect():
+    g.locale = request.cookies.get("locale", "en")
     print(t("client_connected", g.locale))
 
 
 @socketio.on("disconnect", namespace="/stream")
 def handle_disconnect():
+    g.locale = request.cookies.get("locale", "en")
     print(t("client_disconnected", g.locale))
+
+
+@socketio.on("set_locale", namespace="/stream")
+def set_locale(locale):
+    g.locale = locale
 
 
 # Messages history
@@ -185,7 +191,7 @@ def process_transcription():
     messages.append({"role": "user", "content": query})
 
     response = openai.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model="gpt-4o",
         messages=messages,
         temperature=0.5,
         stream=True,
@@ -208,7 +214,7 @@ def process_transcription():
         elevenlabs.generate(
             text=generator,
             voice=VOICE_ID,
-            model="eleven_turbo_v2",
+            model="eleven_multilingual_v2",
             stream=True,
             api_key=os.getenv("ELEVENLABS_API_KEY"),
             latency=3,
@@ -219,4 +225,4 @@ def process_transcription():
 
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", debug=True, port=3000)
+    socketio.run(app, host="0.0.0.0", debug=True, port=5000)

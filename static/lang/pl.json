@@ -9,6 +9,7 @@
   "conversation_example": "Przyk\u0142adowa rozmowa:",
   "error_accessing_microphone": "B\u0142\u0105d przy uzyskiwaniu dost\u0119pu do mikrofonu:",
   "websocket_connection_opened": "Otwarto po\u0142\u0105czenie WebSocket",
+  "websocket_connection_failed": "Po\u0142\u0105czenie WebSocket nie powiod\u0142o si\u0119:",
   "websocket_connection_closed": "Zamkni\u0119to po\u0142\u0105czenie WebSocket",
   "recording": "Nagrywanie\u2026",
   "start_recording": "Rozpocznij nagrywanie"

@@ -1,14 +1,22 @@
-import { t } from "./audio.js";
+import { locale, t } from "./audio.js";
 
-const elSocket = io.connect("http://localhost:3000/stream");
+const elSocket = io("http://localhost:5000/stream", {
+  transports: ["websocket"],
+  upgrade: false,
+});
 
 // Logging
 elSocket.on("connect", () => {
+  elSocket.emit("set_locale", locale);
   console.log(t("websocket_connection_opened"));
 });
 
+elSocket.on("connect_error", (err) => {
+  console.error(t("websocket_connection_failed"), err);
+  console.log(JSON.stringify(err, null, 2));
+});
+
 elSocket.on("message", async (data) => {
-  console.log(data);
   if (data === "new_response") {
     document.getElementById("conversation").innerHTML += "<br><br>";
     return;

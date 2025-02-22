@@ -9,6 +9,7 @@
   "conversation_example": "Conversation example:",
   "error_accessing_microphone": "Error accessing microphone:",
   "websocket_connection_opened": "WebSocket connection opened",
+  "websocket_connection_failed": "WebSocket connection failed:",
   "websocket_connection_closed": "WebSocket connection closed",
   "recording": "Recording\u2026",
   "start_recording": "Start Recording"

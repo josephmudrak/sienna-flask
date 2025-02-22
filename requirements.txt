@@ -1,9 +1,9 @@
+elevenlabs
 flask[async]
 Flask_Cors
 Flask_SocketIO
 openai
 pandas
 python-dotenv
+scikit-learn
 sentence_transformers
-websockets
-elevenlabs @ git+https://github.com/YoanGab/elevenlabs-python
