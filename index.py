@@ -4,6 +4,7 @@ import os
 import pandas as pd
 
 from dotenv import load_dotenv
+from elevenlabs import ElevenLabs, stream
 from flask import Flask, g, jsonify, render_template, request
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -16,6 +17,8 @@ load_dotenv()  # Take environment variables from .env
 # Initialise configuration
 conversation_file: str = None
 embeddings_file: str = None
+
+eleven = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
 
 
 def t(key, locale="en", placeholders=None):
@@ -210,14 +213,12 @@ def process_transcription():
                 yield delta.content
 
     generator = text_iterator()
-    elevenlabs.stream(
-        elevenlabs.generate(
+    stream(
+        eleven.generate(
             text=generator,
             voice=VOICE_ID,
             model="eleven_multilingual_v2",
             stream=True,
-            api_key=os.getenv("ELEVENLABS_API_KEY"),
-            latency=3,
         )
     )
     messages.append({"role": "assistant", "content": current_response})
